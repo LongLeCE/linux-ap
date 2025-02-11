@@ -1,0 +1,8 @@
+#!/bin/bash
+
+CONFIG_FILE=$HOME/.config/create_ap.conf
+INTERFACE=$(cat $CONFIG_FILE | grep INTERNET_IFACE= | awk '{print substr($1, 16)}')
+CHANNEL=$(iw $INTERFACE info | grep channel | awk '{print $2}')
+FREQ_BAND=$( (( $(iw $INTERFACE info | grep channel | awk '{print $9}') > 4900 )) && echo 5 || echo 2.4 )
+
+sudo create_ap --stop $(sudo create_ap --list-running | awk '{print $1}') 2>/dev/null || sudo create_ap --config $CONFIG_FILE -c $CHANNEL --freq-band $FREQ_BAND --daemon
