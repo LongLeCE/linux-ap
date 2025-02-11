@@ -1711,9 +1711,13 @@ if [[ -n "$COUNTRY" ]]; then
 country_code=${COUNTRY}
 ieee80211d=1
 ieee80211h=1
-dtim_period=1
 EOF
 fi
+
+cat << EOF >> $CONFDIR/hostapd.conf
+dtim_period=1
+ssid_protection=1
+EOF
 
 if [[ $FREQ_BAND == 2.4 ]]; then
     echo "hw_mode=g" >> $CONFDIR/hostapd.conf
