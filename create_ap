@@ -1732,7 +1732,7 @@ accept_mac_file=${MAC_FILTER_ACCEPT}
 EOF
 fi
 
-if [[ -n "$CW" ]]; then
+if [[ -n "$CW" ]] && (( $FREQ_BAND == 5 )); then
     echo "vht_oper_chwidth=${CW}" >> $CONFDIR/hostapd.conf
     echo "he_oper_chwidth=${CW}" >> $CONFDIR/hostapd.conf
     echo "eht_oper_chwidth=${CW}" >> $CONFDIR/hostapd.conf
@@ -1740,7 +1740,7 @@ if [[ -n "$CW" ]]; then
     CF1_40=$(( $CHANNEL + 2 * $F40 ))
     (( $(( $CF1_40 % 16 )) > 7 )) && F80=-1 || F80=1
     CF1_80=$(( $CF1_40 + 4 * $F80 ))
-    (( $(( $(( $CF1_80 % 32 )) % 15 )) == 11 )) && F160=-1 || F160=1
+    (( $(( $CF1_80 % 32 % 15 )) == 11 )) && F160=-1 || F160=1
     CF1_160=$(( $CF1_80 + 8 * $F160 ))
     if (( $CW == 0 )); then
         CF1=$CF1_40
@@ -1769,13 +1769,31 @@ if [[ $IEEE80211N -eq 1 ]]; then
 fi
 
 if [[ -n "$HT_CAPAB" ]]; then
-    if [[ -n "$F40" ]]; then
-        HT_CAPAB=${HT_CAPAB//\[HT40+\]/}
-        HT_CAPAB=${HT_CAPAB//\[HT40-\]/}
-        if (( $F40 == 1 )); then
-            HT_CAPAB="${HT_CAPAB}[HT40+]"
-        else
-            HT_CAPAB="${HT_CAPAB}[HT40-]"
+    if (( $FREQ_BAND == 5 )); then
+        if [[ -n "$F40" ]]; then
+            HT_CAPAB_NEW=${HT_CAPAB//\[HT40+\]/}
+            HT_CAPAB_NEW=${HT_CAPAB_NEW//\[HT40-\]/}
+            if [[ $HT_CAPAB_NEW != $HT_CAPAB ]]; then
+                if (( $F40 == 1 )); then
+                    HT_CAPAB="${HT_CAPAB_NEW}[HT40+]"
+                else
+                    HT_CAPAB="${HT_CAPAB_NEW}[HT40-]"
+                fi
+            fi
+        fi
+    else
+        if (( $CHANNEL < 5 )); then
+            HT_CAPAB_NEW=${HT_CAPAB//\[HT40+\]/}
+            HT_CAPAB_NEW=${HT_CAPAB_NEW//\[HT40-\]/}
+            if [[ $HT_CAPAB_NEW != $HT_CAPAB ]]; then
+                HT_CAPAB="${HT_CAPAB_NEW}[HT40+]"
+            fi
+        elif (( $CHANNEL > 9 )); then
+            HT_CAPAB_NEW=${HT_CAPAB//\[HT40+\]/}
+            HT_CAPAB_NEW=${HT_CAPAB_NEW//\[HT40-\]/}
+            if [[ $HT_CAPAB_NEW != $HT_CAPAB ]]; then
+                HT_CAPAB="${HT_CAPAB_NEW}[HT40-]"
+            fi
         fi
     fi
     echo "ht_capab=${HT_CAPAB}" >> $CONFDIR/hostapd.conf
@@ -1785,7 +1803,7 @@ if [[ $IEEE80211AC -eq 1 ]]; then
     echo "ieee80211ac=1" >> $CONFDIR/hostapd.conf
 fi
 
-if [[ -n "$VHT_CAPAB" ]]; then
+if [[ -n "$VHT_CAPAB" ]] && (( $FREQ_BAND == 5 )); then
     echo "vht_capab=${VHT_CAPAB}" >> $CONFDIR/hostapd.conf
 fi
 
