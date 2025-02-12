@@ -1732,11 +1732,52 @@ accept_mac_file=${MAC_FILTER_ACCEPT}
 EOF
 fi
 
+if [[ -n "$CW" ]]; then
+    echo "vht_oper_chwidth=${CW}" >> $CONFDIR/hostapd.conf
+    echo "he_oper_chwidth=${CW}" >> $CONFDIR/hostapd.conf
+    echo "eht_oper_chwidth=${CW}" >> $CONFDIR/hostapd.conf
+    (( $(( $CHANNEL % 8 )) < 2 )) && F40=-1 || F40=1
+    CF1_40=$(( $CHANNEL + 2 * $F40 ))
+    (( $(( $CF1_40 % 16 )) > 7 )) && F80=-1 || F80=1
+    CF1_80=$(( $CF1_40 + 4 * $F80 ))
+    (( $(( $(( $CF1_80 % 32 )) % 15 )) == 11 )) && F160=-1 || F160=1
+    CF1_160=$(( $CF1_80 + 8 * $F160 ))
+    if (( $CW == 0 )); then
+        CF1=$CF1_40
+    elif (( $CW == 1 )); then
+        CF1=$CF1_80
+    elif (( $CW == 2 )); then
+        CF1=$CF1_160
+    elif (( $CW == 3 )); then
+        CF1=$(( $CF1_160 - 8 ))
+        CF2=$(( $CF1_160 + 8 ))
+    fi
+    if [[ -n "$CF1" ]]; then
+        echo "vht_oper_centr_freq_seg0_idx=${CF1}" >> $CONFDIR/hostapd.conf
+        echo "he_oper_centr_freq_seg0_idx=${CF1}" >> $CONFDIR/hostapd.conf
+        echo "eht_oper_centr_freq_seg0_idx=${CF1}" >> $CONFDIR/hostapd.conf
+    fi
+    if [[ -n "$CF2" ]]; then
+        echo "vht_oper_centr_freq_seg1_idx=${CF2}" >> $CONFDIR/hostapd.conf
+        echo "he_oper_centr_freq_seg1_idx=${CF2}" >> $CONFDIR/hostapd.conf
+        echo "eht_oper_centr_freq_seg1_idx=${CF2}" >> $CONFDIR/hostapd.conf
+    fi
+fi
+
 if [[ $IEEE80211N -eq 1 ]]; then
     echo "ieee80211n=1" >> $CONFDIR/hostapd.conf
 fi
 
 if [[ -n "$HT_CAPAB" ]]; then
+    if [[ -n "$F40" ]]; then
+        HT_CAPAB=${HT_CAPAB//\[HT40+\]/}
+        HT_CAPAB=${HT_CAPAB//\[HT40-\]/}
+        if (( $F40 == 1 )); then
+            HT_CAPAB="${HT_CAPAB}[HT40+]"
+        else
+            HT_CAPAB="${HT_CAPAB}[HT40-]"
+        fi
+    fi
     echo "ht_capab=${HT_CAPAB}" >> $CONFDIR/hostapd.conf
 fi
 
@@ -1746,36 +1787,6 @@ fi
 
 if [[ -n "$VHT_CAPAB" ]]; then
     echo "vht_capab=${VHT_CAPAB}" >> $CONFDIR/hostapd.conf
-fi
-
-if [[ -n "$CW" ]]; then
-    echo "vht_oper_chwidth=${CW}" >> $CONFDIR/hostapd.conf
-    echo "he_oper_chwidth=${CW}" >> $CONFDIR/hostapd.conf
-    echo "eht_oper_chwidth=${CW}" >> $CONFDIR/hostapd.conf
-    IDX_MOD=$(( $CHANNEL % 8 ))
-    (( $IDX_MOD < 2 )) && BWF=-1 || BWF=1
-    if (( $CW == 0 )); then
-        CF1=$(( $CHANNEL + 2 * $BWF ))
-    elif (( $CW == 1 )); then
-        CF1=$(( $CHANNEL + 6 * $BWF ))
-    elif (( $CW == 2 )); then
-        CF1=$(( $CHANNEL + 14 * $BWF ))
-    elif (( $CW == 3 )); then
-        CF1=$(( $CHANNEL - 6 ))
-        CF2=$(( $CHANNEL + 6 ))
-    fi
-fi
-
-if [[ -n "$CF1" ]]; then
-    echo "vht_oper_centr_freq_seg0_idx=${CF1}" >> $CONFDIR/hostapd.conf
-    echo "he_oper_centr_freq_seg0_idx=${CF1}" >> $CONFDIR/hostapd.conf
-    echo "eht_oper_centr_freq_seg0_idx=${CF1}" >> $CONFDIR/hostapd.conf
-fi
-
-if [[ -n "$CF2" ]]; then
-    echo "vht_oper_centr_freq_seg1_idx=${CF2}" >> $CONFDIR/hostapd.conf
-    echo "he_oper_centr_freq_seg1_idx=${CF2}" >> $CONFDIR/hostapd.conf
-    echo "eht_oper_centr_freq_seg1_idx=${CF2}" >> $CONFDIR/hostapd.conf
 fi
 
 if [[ $IEEE80211AX -eq 1 ]]; then
