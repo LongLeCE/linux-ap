@@ -15,4 +15,5 @@ Easiest way to use is to call the `toggle-hotspot` when you want your hotspot on
 ## FAQs
 
 `How do I know WIFI_IFACE and INTERNET_IFACE?`
-`INTERNET_IFACE` is the interface of card connecting to your router or your ethernet connection, `WIFI_IFACE` is the interface of the card you want to host the hotspot on. For my case, both are set to `wlp9s0` but yours may differ. You can find out yours by running `ip addr`
+
+`INTERNET_IFACE` is the interface of your ethernet connection or the card connecting to your router, `WIFI_IFACE` is the interface of the card you want to host the hotspot on. For my case, both are set to `wlp9s0` but yours may differ. You can find out yours by running `ip addr`
