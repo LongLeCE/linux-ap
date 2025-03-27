@@ -5,4 +5,14 @@ INTERFACE=$(cat $CONFIG_FILE | grep INTERNET_IFACE= | awk '{print substr($1, 16)
 CHANNEL=$(iw $INTERFACE info | grep channel | awk '{print $2}')
 FREQ_BAND=$( (( $(iw $INTERFACE info | grep channel | awk '{print $9}') > 4900 )) && echo 5 || echo 2.4 )
 
+if [[ -z "$CHANNEL" ]] || [[ -z "$FREQ_BAND" ]]; then
+    if [[ -n "$(iw list | grep '5GHz')" ]]; then
+        CHANNEL=153
+        FREQ_BAND=5
+    else
+        CHANNEL=11
+        FREQ_BAND=2.4
+    fi
+fi
+
 sudo create_ap --stop $(sudo create_ap --list-running | awk '{print $1}') 2>/dev/null || sudo create_ap --config $CONFIG_FILE -c $CHANNEL --freq-band $FREQ_BAND --daemon
