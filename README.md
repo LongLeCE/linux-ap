@@ -6,7 +6,7 @@ In Linux, it can be a pain when you want to create a hotspot with full feature &
 
 Make sure you have `iw`, `hostapd` and `dnsmasq` installed
 
-Put `create_ap` somewhere your `PATH` can see (or you can add the directory of this repo to your `PATH`)
+Put `create_ap` somewhere your `PATH` can see, for example `/usr/bin` (or you can add the directory of this repo to your `PATH`)
 
 Default config and hotspot toggle script are in the `examples` folder
 
